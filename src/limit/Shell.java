@@ -10,6 +10,10 @@ public class Shell
 		var currentTokens = new ArrayList<Token>();
 		var parser = new Parser();
 		var tokenizer = new Tokenizer();
+		for(var tok : Token.tokens)
+		{
+			System.out.println(tok);
+		}
 		try (var scanner = new Scanner(new UnclosableInputStream(System.in)))
 		{
 			while(scanner.hasNextLine())
@@ -18,6 +22,7 @@ public class Shell
 				System.out.println("Input: " + input);
 				var tokens = tokenizer.tokenize(input);
 				currentTokens.addAll(tokens);
+				System.out.println(currentTokens);
 				parser.parse(currentTokens);
 			}
 		}
