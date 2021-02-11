@@ -11,18 +11,19 @@ public class Tokenizer
 		{ "[0-9]", "^[0-9]+" };
 	private static final String[] IDENTIFIER_KEYWORD_REGEX =
 		{ "[_A-Za-z]", "^[_A-Za-z][_A-Za-z0-9]*" };
+	private static final String[] WHITESPACE_REGEX = {};
 	private String input;
 	private int cursor;
 	private State state;
 	private ArrayDeque<Integer> interpolationScopes;
-	
+
 	public Tokenizer()
 	{
 		this.input = "";
 		this.state = State.READING_INPUT;
 		this.interpolationScopes = new ArrayDeque<>();
 	}
-
+	
 	public List<Token> tokenize(String input)
 	{
 		var result = new ArrayList<Token>();
@@ -33,13 +34,13 @@ public class Tokenizer
 		}
 		return result;
 	}
-
+	
 	private void setInput(String input)
 	{
 		this.input = input;
 		this.cursor = 0;
 	}
-
+	
 	private Token getNextToken()
 	{
 		if(!hasNextToken())
@@ -60,6 +61,10 @@ public class Tokenizer
 				else if(firstStr.matches(IDENTIFIER_KEYWORD_REGEX[0]))
 				{
 					return getIdentifierOrKeyword(rest);
+				}
+				else if(firstStr.matches(WHITESPACE_REGEX[0]))
+				{
+					return getWhitespace(rest);
 				}
 				else if(first == Token.T_QUOTE.getChar())
 				{
@@ -109,7 +114,7 @@ public class Tokenizer
 		throw new IllegalStateException(
 			"Unexpected character: \'" + first + "\' at index " + this.cursor);
 	}
-
+	
 	private Token getString(String rest)
 	{
 		var idx = 0;
@@ -127,7 +132,7 @@ public class Tokenizer
 		advance(idx);
 		return new Token(rest.substring(0, idx), TokenType.T_STRING_LITERAL);
 	}
-
+	
 	private Token getNumber(String rest)
 	{
 		var regex = NUMBER_REGEX[1];
@@ -141,7 +146,7 @@ public class Tokenizer
 		}
 		throw new IllegalStateException("Unexpected number at index " + this.cursor);
 	}
-
+	
 	private Token getIdentifierOrKeyword(String rest)
 	{
 		var regex = IDENTIFIER_KEYWORD_REGEX[1];
@@ -162,7 +167,21 @@ public class Tokenizer
 		}
 		throw new IllegalStateException("Unexpected identifier or keyword at index " + this.cursor);
 	}
-
+	
+	private Token getWhitespace(String rest)
+	{
+		var regex = WHITESPACE_REGEX[1];
+		var pattern = Pattern.compile(regex);
+		var matcher = pattern.matcher(rest);
+		if(matcher.find(0))
+		{
+			var match = matcher.group();
+			advance(match.length());
+			return new Token(match, TokenType.T_WHITESPACE);
+		}
+		throw new IllegalStateException("Unexpected whitespace at index " + this.cursor);
+	}
+	
 	/**
 	 * Advance by N chars
 	 */
@@ -170,27 +189,27 @@ public class Tokenizer
 	{
 		this.cursor += N;
 	}
-
+	
 	private void transition(State state)
 	{
 		this.state = state;
 	}
-
+	
 	private boolean hasNextToken()
 	{
 		return this.cursor < this.input.length();
 	}
-
+	
 	private void openInterpolationScope()
 	{
 		this.interpolationScopes.push(0);
 	}
-	
+
 	private void closeInterpolationScope()
 	{
 		this.interpolationScopes.pop();
 	}
-
+	
 	/**
 	 * @return Whether the current interpolation scope has ended
 	 */
@@ -205,7 +224,7 @@ public class Tokenizer
 		System.out.println(this.interpolationScopes);
 		return this.interpolationScopes.peek() == 0;
 	}
-
+	
 	private enum State
 	{
 		READING_INPUT, READING_STRING, READ_STRING;
