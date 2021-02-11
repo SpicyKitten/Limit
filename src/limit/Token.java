@@ -20,6 +20,7 @@ public class Token
 	public static final Token T_EQUALS = new Token("=");
 	public static final Token T_QUOTE = new Token("\"");
 	public static final Token T_BACK = new Token("\\");
+	public static final Token T_EOF = new Token("\0");
 	public static final Token T_COMMA = new Token(",");
 	public static final Token T_NOT = new Token("!");
 	public static final Token T_SEMI = new Token(";");
@@ -37,23 +38,23 @@ public class Token
 	public static final Token T_LAMBDA = new Token("->");
 	public static final Token T_AND = new Token("&&");
 	public static final Token T_OR = new Token("||");
-	public static final Token T_CLASS = new Token("class");
-	public static final Token T_NEW = new Token("new");
-	public static final Token T_THIS = new Token("this");
-	public static final Token T_PRINT = new Token("print");
-	public static final Token T_LET = new Token("let");
-	public static final Token T_VAR = new Token("var");
-	public static final Token T_SUBST = new Token("substitute");
-	public static final Token T_INTO = new Token("into");
-	public static final Token T_TRUE = new Token("true");
-	public static final Token T_FALSE = new Token("false");
-	public static final Token T_EXIT = new Token("exit");
+	public static final Token T_CLASS = new Token("class", TokenType.T_CLASS);
+	public static final Token T_NEW = new Token("new", TokenType.T_NEW);
+	public static final Token T_THIS = new Token("this", TokenType.T_THIS);
+	public static final Token T_PRINT = new Token("print", TokenType.T_PRINT);
+	public static final Token T_LET = new Token("let", TokenType.T_LET);
+	public static final Token T_VAR = new Token("var", TokenType.T_VAR);
+	public static final Token T_SUBST = new Token("substitute", TokenType.T_SUBST);
+	public static final Token T_INTO = new Token("into", TokenType.T_INTO);
+	public static final Token T_TRUE = new Token("true", TokenType.T_TRUE);
+	public static final Token T_FALSE = new Token("false", TokenType.T_FALSE);
+	public static final Token T_EXIT = new Token("exit", TokenType.T_EXIT);
 	public static final Token[] zeroCharacterTokens =
 		{ T_EMPTY };
 	public static final Token[] singleCharacterTokens =
 		{ T_CARAT, T_STAR, T_LPAREN, T_RPAREN, T_LBRACK, T_RBRACK, T_LCURLY, T_RCURLY, T_PLUS,
-			T_MINUS, T_SLASH, T_MOD, T_EQUALS, T_QUOTE, T_BACK, T_COMMA, T_NOT, T_SEMI, T_MORE,
-			T_LESS };
+			T_MINUS, T_SLASH, T_MOD, T_EQUALS, T_QUOTE, T_BACK, T_EOF, T_COMMA, T_NOT, T_SEMI,
+			T_MORE, T_LESS };
 	public static final Token[] twoCharacterTokens =
 		{ T_MORE_EQ, T_LESS_EQ, T_EQ_EQ, T_NOT_EQ, T_PLUS_EQ, T_MINUS_EQ, T_TIMES_EQ, T_POWER_EQ,
 			T_MOD_EQ, T_LAMBDA, T_AND, T_OR };
@@ -73,7 +74,7 @@ public class Token
 	public Token(String value)
 	{
 		this.value = value;
-		this.type = TokenType.UNSPECIFIED;
+		this.type = TokenType.T_UNSPECIFIED;
 	}
 
 	public String getValue()
@@ -98,7 +99,7 @@ public class Token
 	@Override
 	public String toString()
 	{
-		return String.format("Token(%s)", this.value);
+		return "Token[v=%s, t=%s]".formatted(this.value, this.type);
 	}
 
 	@SafeVarargs

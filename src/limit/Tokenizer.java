@@ -3,14 +3,19 @@ package limit;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class Tokenizer
 {
+	private static final String[] NUMBER_REGEX =
+		{ "[0-9]", "^[0-9]+" };
+	private static final String[] IDENTIFIER_KEYWORD_REGEX =
+		{ "[_A-Za-z]", "^[_A-Za-z][_A-Za-z0-9]*" };
 	private String input;
 	private int cursor;
 	private State state;
 	private ArrayDeque<Integer> interpolationScopes;
-
+	
 	public Tokenizer()
 	{
 		this.input = "";
@@ -43,13 +48,18 @@ public class Tokenizer
 		}
 		var rest = this.input.substring(this.cursor);
 		var first = rest.charAt(0);
+		var firstStr = "" + first;
 		switch (this.state)
 		{
 			case READING_INPUT ->
 			{
-				if(Character.isDigit(rest.charAt(0)))
+				if(firstStr.matches(NUMBER_REGEX[0]))
 				{
 					return getNumber(rest);
+				}
+				else if(firstStr.matches(IDENTIFIER_KEYWORD_REGEX[0]))
+				{
+					return getIdentifierOrKeyword(rest);
 				}
 				else if(first == Token.T_QUOTE.getChar())
 				{
@@ -80,7 +90,7 @@ public class Tokenizer
 			}
 			case READ_STRING ->
 			{
-				if(rest.charAt(0) == Token.T_QUOTE.getChar())
+				if(first == Token.T_QUOTE.getChar())
 				{
 					transition(State.READING_INPUT);
 					advance(1);
@@ -97,7 +107,7 @@ public class Tokenizer
 			}
 		}
 		throw new IllegalStateException(
-			"Unexpected character: \'" + rest.charAt(0) + "\' at index " + this.cursor);
+			"Unexpected character: \'" + first + "\' at index " + this.cursor);
 	}
 
 	private Token getString(String rest)
@@ -115,18 +125,42 @@ public class Tokenizer
 			idx++;
 		}
 		advance(idx);
-		return new Token(rest.substring(0, idx), TokenType.STRING);
+		return new Token(rest.substring(0, idx), TokenType.T_STRING_LITERAL);
 	}
 
 	private Token getNumber(String rest)
 	{
-		var idx = 0;
-		while(idx < rest.length() && Character.isDigit(rest.charAt(idx)))
+		var regex = NUMBER_REGEX[1];
+		var pattern = Pattern.compile(regex);
+		var matcher = pattern.matcher(rest);
+		if(matcher.find(0))
 		{
-			idx++;
+			var match = matcher.group();
+			advance(match.length());
+			return new Token(match, TokenType.T_NUMBER);
 		}
-		advance(idx);
-		return new Token(rest.substring(0, idx), TokenType.NUMBER);
+		throw new IllegalStateException("Unexpected number at index " + this.cursor);
+	}
+
+	private Token getIdentifierOrKeyword(String rest)
+	{
+		var regex = IDENTIFIER_KEYWORD_REGEX[1];
+		var pattern = Pattern.compile(regex);
+		var matcher = pattern.matcher(rest);
+		if(matcher.find(0))
+		{
+			var match = matcher.group();
+			advance(match.length());
+			for(var token : Token.keywords)
+			{
+				if(match.equalsIgnoreCase(token.getValue()))
+				{
+					return token;
+				}
+			}
+			return new Token(match, TokenType.T_IDENTIFIER);
+		}
+		throw new IllegalStateException("Unexpected identifier or keyword at index " + this.cursor);
 	}
 
 	/**
