@@ -26,6 +26,7 @@ public class Token
 	public static final Token T_SEMI = new Token(";");
 	public static final Token T_MORE = new Token(">");
 	public static final Token T_LESS = new Token("<");
+	public static final Token T_COLON = new Token(":");
 	public static final Token T_MORE_EQ = new Token(">=");
 	public static final Token T_LESS_EQ = new Token("<=");
 	public static final Token T_EQ_EQ = new Token("==");
@@ -60,11 +61,11 @@ public class Token
 			T_MOD_EQ, T_LAMBDA, T_AND, T_OR };
 	public static final Token[] keywords =
 		{ T_CLASS, T_NEW, T_THIS, T_PRINT, T_LET, T_VAR, T_SUBST, T_INTO, T_TRUE, T_FALSE, T_EXIT };
-	public static final Token[] tokens = unpack(singleCharacterTokens,
-		unpack(twoCharacterTokens, unpack(keywords)));
+	public static final Token[] tokens =
+		unpack(singleCharacterTokens, unpack(twoCharacterTokens, unpack(keywords)));
 	private String value;
 	private TokenType type;
-	
+
 	public Token(String value, TokenType type)
 	{
 		this.value = value;

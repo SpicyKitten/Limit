@@ -6,6 +6,6 @@ public class Parser
 {
 	public void parse(List<Token> tokens)
 	{
-		// do nothing, for now
+		System.out.println("Parser invoked");
 	}
 }
