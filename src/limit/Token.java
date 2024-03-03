@@ -18,6 +18,7 @@ public class Token
 	public static final Token T_SLASH = new Token("/");
 	public static final Token T_MOD = new Token("%");
 	public static final Token T_EQUALS = new Token("=");
+	public static final Token T_TICK = new Token("\'");
 	public static final Token T_QUOTE = new Token("\"");
 	public static final Token T_BACK = new Token("\\");
 	public static final Token T_EOF = new Token("\0");
@@ -54,8 +55,8 @@ public class Token
 		{ T_EMPTY };
 	public static final Token[] singleCharacterTokens =
 		{ T_CARAT, T_STAR, T_LPAREN, T_RPAREN, T_LBRACK, T_RBRACK, T_LCURLY, T_RCURLY, T_PLUS,
-			T_MINUS, T_SLASH, T_MOD, T_EQUALS, T_QUOTE, T_BACK, T_EOF, T_COMMA, T_NOT, T_SEMI,
-			T_MORE, T_LESS };
+			T_MINUS, T_SLASH, T_MOD, T_EQUALS, T_TICK, T_QUOTE, T_BACK, T_EOF, T_COMMA, T_NOT,
+			T_SEMI, T_MORE, T_LESS, T_COLON };
 	public static final Token[] twoCharacterTokens =
 		{ T_MORE_EQ, T_LESS_EQ, T_EQ_EQ, T_NOT_EQ, T_PLUS_EQ, T_MINUS_EQ, T_TIMES_EQ, T_POWER_EQ,
 			T_MOD_EQ, T_LAMBDA, T_AND, T_OR };
@@ -65,24 +66,24 @@ public class Token
 		unpack(singleCharacterTokens, unpack(twoCharacterTokens, unpack(keywords)));
 	private String value;
 	private TokenType type;
-
+	
 	public Token(String value, TokenType type)
 	{
 		this.value = value;
 		this.type = type;
 	}
-
+	
 	public Token(String value)
 	{
 		this.value = value;
 		this.type = TokenType.T_UNSPECIFIED;
 	}
-
+	
 	public String getValue()
 	{
 		return this.value;
 	}
-
+	
 	public char getChar()
 	{
 		if(this.value.length() > 1 || this.value.length() < 0)
@@ -91,18 +92,22 @@ public class Token
 		}
 		return this.value.charAt(0);
 	}
-
+	
 	public TokenType getType()
 	{
 		return this.type;
 	}
-
+	
 	@Override
 	public String toString()
 	{
-		return "Token[v=%s, t=%s]".formatted(this.value, this.type);
+		if(this.type == TokenType.T_UNSPECIFIED)
+		{
+			return "Token[v=`%s`]".formatted(this.value);
+		}
+		return "Token[v=`%s`, t=`%s`]".formatted(this.value, this.type);
 	}
-
+	
 	@SafeVarargs
 	private static <E> E[] unpack(E[] most, E... rest)
 	{

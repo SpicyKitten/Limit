@@ -208,7 +208,13 @@ public class Lexer
 	
 	private void closeInterpolationScope()
 	{
-		this.interpolationScopes.pop();
+		var closedScope = this.interpolationScopes.pop();
+		if(closedScope != 0)
+		{
+			throw new IllegalStateException(
+				"Interpolation scope closed on unexpected brace balance: %s"
+				.formatted(closedScope));
+		}
 	}
 	
 	/**
@@ -216,11 +222,12 @@ public class Lexer
 	 */
 	private boolean updateInterpolationScope(int modifier)
 	{
-		System.out.print("Scopes: " + this.interpolationScopes + "->");
+		/* interpolation scopes are irrelevant if we're not inside a string */
 		if(this.interpolationScopes.isEmpty())
 		{
 			return false;
 		}
+		System.out.print("Scopes: " + this.interpolationScopes + "->");
 		this.interpolationScopes.push(this.interpolationScopes.pop() + modifier);
 		System.out.println(this.interpolationScopes);
 		return this.interpolationScopes.peek() == 0;
