@@ -2,8 +2,12 @@ package limit;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
+
+import limit.exception.LexException;
 
 public class Lexer
 {
@@ -16,16 +20,18 @@ public class Lexer
 	private String input;
 	private int cursor;
 	private State state;
+	private Optional<LexException> errorState;
 	private ArrayDeque<Integer> interpolationScopes;
 	
 	public Lexer()
 	{
 		this.input = "";
 		this.state = State.READING_INPUT;
+		this.errorState = Optional.empty();
 		this.interpolationScopes = new ArrayDeque<>();
 	}
 	
-	public List<Token> tokenize(String input)
+	public List<Token> lex(String input)
 	{
 		var result = new ArrayList<Token>();
 		setInput(input);
@@ -110,10 +116,13 @@ public class Lexer
 					updateInterpolationScope(1);
 					return Token.T_LCURLY;
 				}
+				else if(first == Token.T_RCURLY.getChar())
+				{
+					throw error("Unexpected end of string interpolation at index %s!", this.cursor);
+				}
 			}
 		}
-		throw new IllegalStateException(
-			"Unexpected character: \'" + first + "\' at index " + this.cursor);
+		throw error("Unexpected character: \'%s\' at index %s", first, this.cursor);
 	}
 	
 	private Token getString(String rest)
@@ -121,9 +130,13 @@ public class Lexer
 		var idx = 0;
 		var QUOTE_CHAR = Token.T_QUOTE.getChar();
 		var LCURLY_CHAR = Token.T_LCURLY.getChar();
+		var RCURLY_CHAR = Token.T_RCURLY.getChar();
+		var terminators = Arrays.asList(QUOTE_CHAR, LCURLY_CHAR, RCURLY_CHAR);
 		while(idx < rest.length())
 		{
-			if(rest.charAt(idx) == QUOTE_CHAR || rest.charAt(idx) == LCURLY_CHAR)
+			// if(rest.charAt(idx) == QUOTE_CHAR || rest.charAt(idx) ==
+			// LCURLY_CHAR)
+			if(terminators.contains(rest.charAt(idx)))
 			{
 				transition(State.READ_STRING);
 				break;
@@ -145,7 +158,7 @@ public class Lexer
 			advance(match.length());
 			return new Token(match, TokenType.T_NUMBER);
 		}
-		throw new IllegalStateException("Unexpected number at index " + this.cursor);
+		throw error("Unexpected number at index %s", this.cursor);
 	}
 	
 	private Token getIdentifierOrKeyword(String rest)
@@ -157,16 +170,23 @@ public class Lexer
 		{
 			var match = matcher.group();
 			advance(match.length());
-			for(var token : Token.keywords)
+			var token = Token.parseKeyword(match);
+			if(token != Token.T_NONE)
 			{
-				if(match.equalsIgnoreCase(token.getValue()))
+				return token;
+			}
+			for(var keyword : Token.keywords)
+			{
+				if(match.equalsIgnoreCase(keyword.getValue()))
 				{
-					return token;
+					backtrack(match.length());
+					throw error("Syntax error: invalid keyword `%s` (did you mean `%s`?)", match,
+						keyword.getValue());
 				}
 			}
 			return new Token(match, TokenType.T_IDENTIFIER);
 		}
-		throw new IllegalStateException("Unexpected identifier or keyword at index " + this.cursor);
+		throw error("Unexpected identifier or keyword at index %s", this.cursor);
 	}
 	
 	private Token getWhitespace(String rest)
@@ -180,7 +200,13 @@ public class Lexer
 			advance(match.length());
 			return new Token(match, TokenType.T_WHITESPACE);
 		}
-		throw new IllegalStateException("Unexpected whitespace at index " + this.cursor);
+		throw error("Unexpected whitespace at index %s", this.cursor);
+	}
+	
+	private LexException error(String format, Object... args)
+	{
+		this.errorState = Optional.of(new LexException(format.formatted(args)));
+		return this.errorState.orElseThrow();
 	}
 	
 	/**
@@ -189,6 +215,11 @@ public class Lexer
 	private void advance(int N)
 	{
 		this.cursor += N;
+	}
+	
+	private void backtrack(int N)
+	{
+		this.cursor -= N;
 	}
 	
 	private void transition(State state)
@@ -211,9 +242,7 @@ public class Lexer
 		var closedScope = this.interpolationScopes.pop();
 		if(closedScope != 0)
 		{
-			throw new IllegalStateException(
-				"Interpolation scope closed on unexpected brace balance: %s"
-				.formatted(closedScope));
+			throw error("Interpolation scope ends with unbalanced brace count: %s", closedScope);
 		}
 	}
 	
@@ -231,6 +260,24 @@ public class Lexer
 		this.interpolationScopes.push(this.interpolationScopes.pop() + modifier);
 		System.out.println(this.interpolationScopes);
 		return this.interpolationScopes.peek() == 0;
+	}
+	
+	/**
+	 * Converts the Lexer to string format.
+	 * @return a string representation of the Lexer
+	 */
+	@Override
+	public String toString()
+	{
+		var pointer = " ".repeat(this.cursor) + "^";
+		var prefix = " ".repeat(this.cursor);
+		var message =
+			this.errorState.map(err -> prefix + err.getMessage()).orElse("Lexer is in good state");
+		return """
+			[Lexer state=%s scopes=%s]
+			%s
+			%s
+			%s""".formatted(this.state, this.interpolationScopes, this.input, pointer, message);
 	}
 	
 	private enum State

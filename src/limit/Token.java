@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 public class Token
 {
+	public static final Token T_NONE = null;
 	public static final Token T_EMPTY = new Token("");
 	public static final Token T_CARAT = new Token("^");
 	public static final Token T_STAR = new Token("*");
@@ -77,6 +78,56 @@ public class Token
 	{
 		this.value = value;
 		this.type = TokenType.T_UNSPECIFIED;
+	}
+	
+	public static Token parseToken(String input)
+	{
+		for(var token : Token.tokens)
+		{
+			if(token.value.equals(input))
+			{
+				return token;
+			}
+		}
+		throw new IllegalArgumentException("Invalid token as input: %s".formatted(input));
+	}
+	
+	/**
+	 * Parses a keyword token from the input string.
+	 *
+	 * @param input The string to parse
+	 * @return The parsed token.
+	 */
+	public static Token parseKeyword(String input)
+	{
+		for(Token token : Token.keywords)
+		{
+			if(token.value.equals(input))
+			{
+				return token;
+			}
+		}
+		return Token.T_NONE;
+	}
+	
+	/**
+	 * Parses a token from the input string.
+	 *
+	 * @param input      The string to parse.
+	 * @param characters The max number of characters possible in the
+	 *                   parsed token.
+	 * @return The parsed token.
+	 */
+	public static Token parseToken(String input, int characters)
+	{
+		for(var token : Token.tokens)
+		{
+			if(token.value.length() <= characters && token.value.equals(input))
+			{
+				return token;
+			}
+		}
+		throw new IllegalArgumentException("Invalid token as input: %s".formatted(input));
 	}
 	
 	public String getValue()
