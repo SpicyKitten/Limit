@@ -3,9 +3,10 @@ package limit;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import limit.exception.LexException;
 
@@ -17,18 +18,22 @@ public class Lexer
 		{ "[_A-Za-z]", "^[_A-Za-z][_A-Za-z0-9]*" };
 	private static final String[] WHITESPACE_REGEX =
 		{ "[ \n\r]", "^[ \n\r]+" };
+	private static final String[] NON_TOKEN_REGEX =
+		{ "[ \n\r_A-Za-z0-9]" };
 	private String input;
 	private int cursor;
 	private State state;
-	private Optional<LexException> errorState;
+	private LexException errorState;
 	private ArrayDeque<Integer> interpolationScopes;
+	private ArrayDeque<LexScope> scopes;
 	
 	public Lexer()
 	{
 		this.input = "";
 		this.state = State.READING_INPUT;
-		this.errorState = Optional.empty();
+		this.errorState = null;
 		this.interpolationScopes = new ArrayDeque<>();
+		this.scopes = new ArrayDeque<>();
 	}
 	
 	public List<Token> lex(String input)
@@ -39,7 +44,33 @@ public class Lexer
 		{
 			result.add(getNextToken());
 		}
+		check();
 		return result;
+	}
+	
+	public void check()
+	{
+		if(!this.scopes.isEmpty())
+		{
+			// @formatter:off
+			var positions = this.scopes
+				.stream()
+				.mapToInt(LexScope::position)
+				.mapToObj(String::valueOf)
+				.collect(Collectors.joining(", "));
+			// @formatter:on
+			throw error("Unclosed scope at %s".formatted(positions), this.scopes);
+		}
+		var unclosedScopes = new StringBuilder();
+		for(var scope : this.interpolationScopes)
+		{
+			unclosedScopes.append("}".repeat(scope)).append('\"');
+			error("Unclosed interpolation scope(s): %s".formatted(unclosedScopes.toString()));
+		}
+		if(this.errorState != null)
+		{
+			throw this.errorState;
+		}
 	}
 	
 	private void setInput(String input)
@@ -76,24 +107,57 @@ public class Lexer
 				else if(first == Token.T_QUOTE.getChar())
 				{
 					transition(State.READING_STRING);
+					openScope(firstStr);
 					advance(1);
 					openInterpolationScope();
 					return Token.T_QUOTE;
 				}
 				else if(first == Token.T_LCURLY.getChar())
 				{
+					openScope(firstStr);
 					updateInterpolationScope(1);
 					advance(1);
 					return Token.T_LCURLY;
 				}
 				else if(first == Token.T_RCURLY.getChar())
 				{
+					closeScope(firstStr);
 					if(updateInterpolationScope(-1))
 					{
 						transition(State.READING_STRING);
 					}
 					advance(1);
 					return Token.T_RCURLY;
+				}
+				else if(first == Token.T_LPAREN.getChar())
+				{
+					openScope(firstStr);
+					advance(1);
+					return Token.T_LPAREN;
+				}
+				else if(first == Token.T_RPAREN.getChar())
+				{
+					closeScope(firstStr);
+					advance(1);
+					return Token.T_RPAREN;
+				}
+				else if(first == Token.T_LBRACK.getChar())
+				{
+					openScope(firstStr);
+					advance(1);
+					return Token.T_LBRACK;
+				}
+				else if(first == Token.T_RBRACK.getChar())
+				{
+					closeScope(firstStr);
+					advance(1);
+					return Token.T_RBRACK;
+				}
+				else
+				{
+					System.out.println(rest);
+					advance(1);
+					return Token.T_EMPTY;
 				}
 			}
 			case READING_STRING ->
@@ -105,22 +169,58 @@ public class Lexer
 				if(first == Token.T_QUOTE.getChar())
 				{
 					transition(State.READING_INPUT);
+					closeScope(firstStr);
 					advance(1);
 					closeInterpolationScope();
 					return Token.T_QUOTE;
 				}
 				else if(first == Token.T_LCURLY.getChar())
 				{
-					transition(State.READING_INPUT);
+					transition(State.READ_LCURLY);
 					advance(1);
-					updateInterpolationScope(1);
-					return Token.T_LCURLY;
+					return Token.T_EMPTY;
 				}
 				else if(first == Token.T_RCURLY.getChar())
 				{
-					throw error("Unexpected end of string interpolation at index %s!", this.cursor);
+					transition(State.READ_RCURLY);
+					advance(1);
+					return Token.T_EMPTY;
 				}
 			}
+			case READ_LCURLY ->
+			{
+				if(first == Token.T_LCURLY.getChar())
+				{
+					transition(State.READING_STRING);
+					advance(1);
+				}
+				else
+				{
+					transition(State.READING_INPUT);
+					backtrack(1);
+					openScope("{");
+					// change state only, we need to read this character again
+					advance(1);
+					updateInterpolationScope(1);
+				}
+				return Token.T_LCURLY;
+			}
+			case READ_RCURLY ->
+			{
+				if(first == Token.T_RCURLY.getChar())
+				{
+					transition(State.READING_STRING);
+					advance(1);
+					return Token.T_RCURLY;
+				}
+				else
+				{
+					backtrack(1);
+					throw error("`}` without corresponding `{` at index %s!", this.cursor);
+				}
+			}
+			default
+				-> throw new IllegalArgumentException("Unexpected value: %s".formatted(this.state));
 		}
 		throw error("Unexpected character: \'%s\' at index %s", first, this.cursor);
 	}
@@ -203,10 +303,26 @@ public class Lexer
 		throw error("Unexpected whitespace at index %s", this.cursor);
 	}
 	
+	private LexException error(String format, Collection<? extends Position<String>> positions,
+		Object... args)
+	{
+		this.state = State.ERROR;
+		// this.errorState = Optional.of(new
+		// LexException(format.formatted(args), positions));
+		// return this.errorState.orElseThrow();
+		this.errorState = new LexException(format.formatted(args), positions);
+		return this.errorState;
+	}
+	
 	private LexException error(String format, Object... args)
 	{
-		this.errorState = Optional.of(new LexException(format.formatted(args)));
-		return this.errorState.orElseThrow();
+		this.state = State.ERROR;
+		this.scopes.clear();
+		// this.errorState = Optional.of(new
+		// LexException(format.formatted(args)));
+		// return this.errorState.orElseThrow();
+		this.errorState = new LexException(format.formatted(args));
+		return this.errorState;
 	}
 	
 	/**
@@ -224,12 +340,33 @@ public class Lexer
 	
 	private void transition(State state)
 	{
+		System.out.println("new state: %s".formatted(state));
 		this.state = state;
 	}
 	
 	private boolean hasNextToken()
 	{
-		return this.cursor < this.input.length();
+		return this.cursor < this.input.length() && this.state != State.ERROR;
+	}
+	
+	private void openScope(String delimiter)
+	{
+		System.out.println("opened scope: %s".formatted(delimiter));
+		this.scopes.push(new LexScope(this.cursor, delimiter));
+	}
+	
+	private void closeScope(String delimiter)
+	{
+		if(this.scopes.isEmpty())
+		{
+			throw error("Unbalanced %s at index %s", delimiter, this.cursor);
+		}
+		var scope = this.scopes.pop();
+		if(!scope.matches(delimiter))
+		{
+			throw error("Mismatching %s%s at index %s", scope.representation(), delimiter,
+				this.cursor);
+		}
 	}
 	
 	private void openInterpolationScope()
@@ -264,15 +401,75 @@ public class Lexer
 	
 	/**
 	 * Converts the Lexer to string format.
+	 * 
 	 * @return a string representation of the Lexer
 	 */
 	@Override
 	public String toString()
 	{
-		var pointer = " ".repeat(this.cursor) + "^";
-		var prefix = " ".repeat(this.cursor);
+		var pointer = new StringBuilder(" ".repeat(this.cursor));
+		// @formatter:off
+//		this.errorState
+//			.map(LexException::getPositions)
+//			.ifPresentOrElse(positions -> positions
+//				.stream()
+//				.map(Position::position)
+//				.forEach(position -> {
+//					pointer.setCharAt(position, '^');
+//				}
+//			),
+//			() -> pointer.append('^')
+//		);
+//		this.errorState.stream()
+//			.map(LexException::getPositions)
+//			.flatMap(Collection::stream)
+//			.mapToInt(Position::position)
+//			.forEach(position -> pointer.setCharAt(position, '^'));
+//		var empty = Optional.of(new LexException("", List.of()));
+//		this.errorState.or(() -> empty).stream()
+//			.map(LexException::getPositions)
+//			.filter(Collection::isEmpty)
+//			.forEach(__ -> pointer.append('^'));
+//		var left = this.errorState
+//			.stream()
+//			.map(LexException::getPositions)
+//			.flatMap(Collection::stream)
+//			.mapToInt(Position::position)
+//			.min()
+//			.orElse(this.cursor);
+		var leftmost = this.cursor;
+		if(this.errorState == null || this.errorState.getPositions().isEmpty())
+		{
+			pointer.append('^');
+		}
+		else
+		{
+			for(var position : this.errorState.getPositions())
+			{
+				leftmost = Math.min(leftmost, position.position());
+				pointer.setCharAt(position.position(), '^');
+			}
+		}
+		// @formatter:on
+		// var leftmost = Math.min(left, this.cursor);
+		// .map(
+		// positions -> positions.stream().mapToInt(Position::position).min()
+		// );
+		// if(this.scopes.isEmpty())
+		// {
+		// pointer.append('^');
+		// }
+		// for(var scope : this.scopes)
+		// {
+		// pointer.setCharAt(scope.position(), '^');
+		// leftmost = Math.min(leftmost, scope.position());
+		// }
+		var prefix = " ".repeat(leftmost);
 		var message =
-			this.errorState.map(err -> prefix + err.getMessage()).orElse("Lexer is in good state");
+			this.errorState == null ? "Lexer is in good state" : this.errorState.getMessage();
+		// var message =
+		// this.errorState.map(err -> prefix + err.getMessage()).orElse("Lexer
+		// is in good state");
 		return """
 			[Lexer state=%s scopes=%s]
 			%s
@@ -282,6 +479,6 @@ public class Lexer
 	
 	private enum State
 	{
-		READING_INPUT, READING_STRING, READ_STRING;
+		READING_INPUT, READING_STRING, READ_STRING, READ_LCURLY, READ_RCURLY, ERROR;
 	}
 }

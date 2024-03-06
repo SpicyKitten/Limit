@@ -14,6 +14,8 @@ public class Token
 	public static final Token T_RBRACK = new Token("]");
 	public static final Token T_LCURLY = new Token("{");
 	public static final Token T_RCURLY = new Token("}");
+	public static final Token T_LANGLE = new Token("<");
+	public static final Token T_RANGLE = new Token(">");
 	public static final Token T_PLUS = new Token("+");
 	public static final Token T_MINUS = new Token("-");
 	public static final Token T_SLASH = new Token("/");
@@ -26,8 +28,6 @@ public class Token
 	public static final Token T_COMMA = new Token(",");
 	public static final Token T_NOT = new Token("!");
 	public static final Token T_SEMI = new Token(";");
-	public static final Token T_MORE = new Token(">");
-	public static final Token T_LESS = new Token("<");
 	public static final Token T_COLON = new Token(":");
 	public static final Token T_MORE_EQ = new Token(">=");
 	public static final Token T_LESS_EQ = new Token("<=");
@@ -38,7 +38,9 @@ public class Token
 	public static final Token T_TIMES_EQ = new Token("*=");
 	public static final Token T_POWER_EQ = new Token("^=");
 	public static final Token T_MOD_EQ = new Token("%=");
-	public static final Token T_LAMBDA = new Token("->");
+	// continuation fn ( params ) -> continuation { body }
+	public static final Token T_CONT = new Token("->");
+	public static final Token T_LAMBDA = new Token("=>");
 	public static final Token T_AND = new Token("&&");
 	public static final Token T_OR = new Token("||");
 	public static final Token T_CLASS = new Token("class", TokenType.T_CLASS);
@@ -55,12 +57,12 @@ public class Token
 	public static final Token[] zeroCharacterTokens =
 		{ T_EMPTY };
 	public static final Token[] singleCharacterTokens =
-		{ T_CARAT, T_STAR, T_LPAREN, T_RPAREN, T_LBRACK, T_RBRACK, T_LCURLY, T_RCURLY, T_PLUS,
-			T_MINUS, T_SLASH, T_MOD, T_EQUALS, T_TICK, T_QUOTE, T_BACK, T_EOF, T_COMMA, T_NOT,
-			T_SEMI, T_MORE, T_LESS, T_COLON };
+		{ T_CARAT, T_STAR, T_LPAREN, T_RPAREN, T_LBRACK, T_RBRACK, T_LCURLY, T_RCURLY, T_LANGLE,
+			T_RANGLE, T_PLUS, T_MINUS, T_SLASH, T_MOD, T_EQUALS, T_TICK, T_QUOTE, T_BACK, T_EOF,
+			T_COMMA, T_NOT, T_SEMI, T_COLON };
 	public static final Token[] twoCharacterTokens =
 		{ T_MORE_EQ, T_LESS_EQ, T_EQ_EQ, T_NOT_EQ, T_PLUS_EQ, T_MINUS_EQ, T_TIMES_EQ, T_POWER_EQ,
-			T_MOD_EQ, T_LAMBDA, T_AND, T_OR };
+			T_MOD_EQ, T_CONT, T_LAMBDA, T_AND, T_OR };
 	public static final Token[] keywords =
 		{ T_CLASS, T_NEW, T_THIS, T_PRINT, T_LET, T_VAR, T_SUBST, T_INTO, T_TRUE, T_FALSE, T_EXIT };
 	public static final Token[] tokens =

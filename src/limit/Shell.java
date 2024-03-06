@@ -24,6 +24,7 @@ public class Shell
 				System.out.println("Input: %s".formatted(input));
 				var tokens = lexer.lex(input);
 				currentTokens.addAll(tokens);
+				lexer.check();
 				System.out.println("New tokens: %s".formatted(tokens));
 				System.out.println(lexer);
 			}

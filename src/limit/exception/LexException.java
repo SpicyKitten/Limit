@@ -1,5 +1,10 @@
 package limit.exception;
 
+import java.util.Collection;
+import java.util.List;
+
+import limit.Position;
+
 /**
  * @complete Under normal circumstances, this code can be considered
  *           complete. Except for bugfixing purposes, there is almost
@@ -8,9 +13,21 @@ package limit.exception;
 public class LexException extends IllegalStateException
 {
 	private static final long serialVersionUID = 3205300631890122410L;
+	private Collection<? extends Position<String>> positions = List.of();
 	
 	public LexException(String s)
 	{
 		super(s);
+	}
+
+	public LexException(String formatted, Collection<? extends Position<String>> positions)
+	{
+		super(formatted);
+		this.positions = positions;
+	}
+	
+	public Collection<? extends Position<String>> getPositions()
+	{
+		return this.positions;
 	}
 }
