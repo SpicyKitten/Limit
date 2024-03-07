@@ -1,14 +1,21 @@
-package limit;
+package limit.core.lexer;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import limit.exception.LexException;
+import limit.core.exception.LexException;
+import limit.core.position.LexCursor;
+import limit.core.position.LexScope;
+import limit.core.position.Position;
+import limit.core.token.Token;
+import limit.core.token.TokenType;
+import limit.util.operations.DefaultMappedValue;
 
 public class Lexer
 {
@@ -21,9 +28,9 @@ public class Lexer
 	private static final String[] NON_TOKEN_REGEX =
 		{ "[ \n\r_A-Za-z0-9]" };
 	private String input;
-	private int cursor;
+	private LexCursor cursor;
 	private State state;
-	private LexException errorState;
+	private DefaultMappedValue<String, LexException> errorState;
 	private ArrayDeque<Integer> interpolationScopes;
 	private ArrayDeque<LexScope> scopes;
 	
@@ -31,15 +38,15 @@ public class Lexer
 	{
 		this.input = "";
 		this.state = State.READING_INPUT;
-		this.errorState = null;
+		this.errorState = new DefaultMappedValue<>("Lexer is in good state", Throwable::getMessage);
 		this.interpolationScopes = new ArrayDeque<>();
 		this.scopes = new ArrayDeque<>();
 	}
 	
-	public List<Token> lex(String input)
+	public List<Token> lex(String... input)
 	{
 		var result = new ArrayList<Token>();
-		setInput(input);
+		setInput(String.join("\n", input));
 		while(hasNextToken())
 		{
 			result.add(getNextToken());
@@ -57,6 +64,7 @@ public class Lexer
 				.stream()
 				.mapToInt(LexScope::position)
 				.mapToObj(String::valueOf)
+				.sorted(Collections.reverseOrder())
 				.collect(Collectors.joining(", "));
 			// @formatter:on
 			throw error("Unclosed scope at %s".formatted(positions), this.scopes);
@@ -67,16 +75,16 @@ public class Lexer
 			unclosedScopes.append("}".repeat(scope)).append('\"');
 			error("Unclosed interpolation scope(s): %s".formatted(unclosedScopes.toString()));
 		}
-		if(this.errorState != null)
+		if(this.errorState.present())
 		{
-			throw this.errorState;
+			throw this.errorState.valueV();
 		}
 	}
 	
 	private void setInput(String input)
 	{
 		this.input = input;
-		this.cursor = 0;
+		this.cursor = new LexCursor(0);
 	}
 	
 	private Token getNextToken()
@@ -85,7 +93,7 @@ public class Lexer
 		{
 			return Token.T_EMPTY;
 		}
-		var rest = this.input.substring(this.cursor);
+		var rest = this.input.substring(this.cursor.position());
 		var first = rest.charAt(0);
 		var firstStr = "" + first;
 		switch(this.state)
@@ -277,11 +285,11 @@ public class Lexer
 			}
 			for(var keyword : Token.keywords)
 			{
-				if(match.equalsIgnoreCase(keyword.getValue()))
+				if(match.equalsIgnoreCase(keyword.value()))
 				{
 					backtrack(match.length());
 					throw error("Syntax error: invalid keyword `%s` (did you mean `%s`?)", match,
-						keyword.getValue());
+						keyword.value());
 				}
 			}
 			return new Token(match, TokenType.T_IDENTIFIER);
@@ -307,22 +315,16 @@ public class Lexer
 		Object... args)
 	{
 		this.state = State.ERROR;
-		// this.errorState = Optional.of(new
-		// LexException(format.formatted(args), positions));
-		// return this.errorState.orElseThrow();
-		this.errorState = new LexException(format.formatted(args), positions);
-		return this.errorState;
+		this.errorState.valueV(new LexException(format.formatted(args), positions));
+		return this.errorState.valueV();
 	}
 	
 	private LexException error(String format, Object... args)
 	{
 		this.state = State.ERROR;
 		this.scopes.clear();
-		// this.errorState = Optional.of(new
-		// LexException(format.formatted(args)));
-		// return this.errorState.orElseThrow();
-		this.errorState = new LexException(format.formatted(args));
-		return this.errorState;
+		this.errorState.valueV(new LexException(format.formatted(args)));
+		return this.errorState.valueV();
 	}
 	
 	/**
@@ -330,12 +332,12 @@ public class Lexer
 	 */
 	private void advance(int N)
 	{
-		this.cursor += N;
+		this.cursor.advance(N);
 	}
 	
 	private void backtrack(int N)
 	{
-		this.cursor -= N;
+		this.cursor.backtrack(N);
 	}
 	
 	private void transition(State state)
@@ -346,13 +348,12 @@ public class Lexer
 	
 	private boolean hasNextToken()
 	{
-		return this.cursor < this.input.length() && this.state != State.ERROR;
+		return this.cursor.position() < this.input.length() && this.state != State.ERROR;
 	}
 	
 	private void openScope(String delimiter)
 	{
-		System.out.println("opened scope: %s".formatted(delimiter));
-		this.scopes.push(new LexScope(this.cursor, delimiter));
+		this.scopes.push(new LexScope(this.cursor.position(), delimiter));
 	}
 	
 	private void closeScope(String delimiter)
@@ -399,6 +400,12 @@ public class Lexer
 		return this.interpolationScopes.peek() == 0;
 	}
 	
+	private Collection<? extends Position<?>> getErrorPositions()
+	{
+		var positions = this.errorState.value(LexException::getPositions, List.of(this.cursor));
+		return positions.isEmpty() ? List.of(this.cursor) : positions;
+	}
+	
 	/**
 	 * Converts the Lexer to string format.
 	 * 
@@ -407,69 +414,16 @@ public class Lexer
 	@Override
 	public String toString()
 	{
-		var pointer = new StringBuilder(" ".repeat(this.cursor));
-		// @formatter:off
-//		this.errorState
-//			.map(LexException::getPositions)
-//			.ifPresentOrElse(positions -> positions
-//				.stream()
-//				.map(Position::position)
-//				.forEach(position -> {
-//					pointer.setCharAt(position, '^');
-//				}
-//			),
-//			() -> pointer.append('^')
-//		);
-//		this.errorState.stream()
-//			.map(LexException::getPositions)
-//			.flatMap(Collection::stream)
-//			.mapToInt(Position::position)
-//			.forEach(position -> pointer.setCharAt(position, '^'));
-//		var empty = Optional.of(new LexException("", List.of()));
-//		this.errorState.or(() -> empty).stream()
-//			.map(LexException::getPositions)
-//			.filter(Collection::isEmpty)
-//			.forEach(__ -> pointer.append('^'));
-//		var left = this.errorState
-//			.stream()
-//			.map(LexException::getPositions)
-//			.flatMap(Collection::stream)
-//			.mapToInt(Position::position)
-//			.min()
-//			.orElse(this.cursor);
-		var leftmost = this.cursor;
-		if(this.errorState == null || this.errorState.getPositions().isEmpty())
+		var positions = getErrorPositions();
+		var leftmost = positions.stream().mapToInt(Position::position).min().getAsInt();
+		var rightmost = positions.stream().mapToInt(Position::position).max().getAsInt();
+		var pointer = new StringBuilder(" ".repeat(rightmost + 1));
+		for(var position : positions)
 		{
-			pointer.append('^');
+			pointer.setCharAt(position.position(), '^');
 		}
-		else
-		{
-			for(var position : this.errorState.getPositions())
-			{
-				leftmost = Math.min(leftmost, position.position());
-				pointer.setCharAt(position.position(), '^');
-			}
-		}
-		// @formatter:on
-		// var leftmost = Math.min(left, this.cursor);
-		// .map(
-		// positions -> positions.stream().mapToInt(Position::position).min()
-		// );
-		// if(this.scopes.isEmpty())
-		// {
-		// pointer.append('^');
-		// }
-		// for(var scope : this.scopes)
-		// {
-		// pointer.setCharAt(scope.position(), '^');
-		// leftmost = Math.min(leftmost, scope.position());
-		// }
 		var prefix = " ".repeat(leftmost);
-		var message =
-			this.errorState == null ? "Lexer is in good state" : this.errorState.getMessage();
-		// var message =
-		// this.errorState.map(err -> prefix + err.getMessage()).orElse("Lexer
-		// is in good state");
+		var message = prefix + this.errorState.value();
 		return """
 			[Lexer state=%s scopes=%s]
 			%s

@@ -1,9 +1,9 @@
-package limit.exception;
+package limit.core.exception;
 
 import java.util.Collection;
 import java.util.List;
 
-import limit.Position;
+import limit.core.position.Position;
 
 /**
  * @complete Under normal circumstances, this code can be considered

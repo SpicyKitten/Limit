@@ -1,9 +1,12 @@
-package limit;
+package limit.core.shell;
 
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import limit.exception.LexException;
+import limit.core.exception.LexException;
+import limit.core.lexer.Lexer;
+import limit.core.parser.Parser;
+import limit.core.token.Token;
 
 public class Shell
 {

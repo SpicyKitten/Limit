@@ -1,10 +1,10 @@
-package limit;
+package limit.core.shell;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-final class UnclosableInputStream extends InputStream
+public final class UnclosableInputStream extends InputStream
 {
 	private InputStream inner;
 	

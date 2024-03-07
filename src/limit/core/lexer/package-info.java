@@ -1,4 +1,4 @@
 /**
  * @author SpicyKitten<rathavilash@gmail.com>
  */
-package limit.exception;
+package limit.core.lexer;

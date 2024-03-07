@@ -1,6 +1,18 @@
-package limit;
+package limit.core.token;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import limit.util.operations.Operations;
+import limit.util.reflection.FieldReflector;
+import throwing.ThrowingSupplier;
 
 public class Token
 {
@@ -54,19 +66,52 @@ public class Token
 	public static final Token T_TRUE = new Token("true", TokenType.T_TRUE);
 	public static final Token T_FALSE = new Token("false", TokenType.T_FALSE);
 	public static final Token T_EXIT = new Token("exit", TokenType.T_EXIT);
-	public static final Token[] zeroCharacterTokens =
-		{ T_EMPTY };
-	public static final Token[] singleCharacterTokens =
-		{ T_CARAT, T_STAR, T_LPAREN, T_RPAREN, T_LBRACK, T_RBRACK, T_LCURLY, T_RCURLY, T_LANGLE,
-			T_RANGLE, T_PLUS, T_MINUS, T_SLASH, T_MOD, T_EQUALS, T_TICK, T_QUOTE, T_BACK, T_EOF,
-			T_COMMA, T_NOT, T_SEMI, T_COLON };
-	public static final Token[] twoCharacterTokens =
-		{ T_MORE_EQ, T_LESS_EQ, T_EQ_EQ, T_NOT_EQ, T_PLUS_EQ, T_MINUS_EQ, T_TIMES_EQ, T_POWER_EQ,
-			T_MOD_EQ, T_CONT, T_LAMBDA, T_AND, T_OR };
-	public static final Token[] keywords =
-		{ T_CLASS, T_NEW, T_THIS, T_PRINT, T_LET, T_VAR, T_SUBST, T_INTO, T_TRUE, T_FALSE, T_EXIT };
+	public static final Token[] zeroCharacterTokens;
+	public static final Token[] oneCharacterTokens;
+	public static final Token[] twoCharacterTokens;
+	public static final Token[] keywords;
+	static
+	{
+		record TokenInfo(List<Token> keywords, Map<Integer, List<Token>> tokensByLength) {}
+		var tokenInfo = ThrowingSupplier.of(() -> {
+			int[] modifiers =
+				{ Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL };
+			var fields = FieldReflector.getFields(Token.class, modifiers);
+			var tokens = new ArrayList<Token>();
+			for(Field field : fields)
+			{
+				var token = (Token) field.get(null);
+				tokens.add(token);
+			}
+			// @formatter:off
+			var keywords = tokens.stream()
+				.filter(Objects::nonNull)
+				.filter(token -> Operations.any(token.value.codePoints(), Character::isAlphabetic))
+				.collect(Collectors.toList());
+			
+			// @formatter:on
+			var tokensByLength = tokens.stream()
+				.filter(Objects::nonNull)
+				.filter(Predicate.not(keywords::contains))
+				.collect(Collectors.groupingBy(token -> token.value.length()));
+			return new TokenInfo(keywords, tokensByLength);
+		}).get();
+		keywords = tokenInfo.keywords.toArray(Token[]::new);
+		var tokensByLength = tokenInfo.tokensByLength;
+		zeroCharacterTokens = tokensByLength.get(0).toArray(Token[]::new);
+		oneCharacterTokens = tokensByLength.get(1).toArray(Token[]::new);
+		twoCharacterTokens = tokensByLength.get(2).toArray(Token[]::new);
+	}
 	public static final Token[] tokens =
-		unpack(singleCharacterTokens, unpack(twoCharacterTokens, unpack(keywords)));
+		unpack(oneCharacterTokens, unpack(twoCharacterTokens, unpack(keywords)));
+	static
+	{
+		System.out.println(Arrays.toString(keywords));
+		System.out.println(Arrays.toString(zeroCharacterTokens));
+		System.out.println(Arrays.toString(oneCharacterTokens));
+		System.out.println(Arrays.toString(twoCharacterTokens));
+		System.out.println(tokens.length);
+	}
 	private String value;
 	private TokenType type;
 	
@@ -132,7 +177,7 @@ public class Token
 		throw new IllegalArgumentException("Invalid token as input: %s".formatted(input));
 	}
 	
-	public String getValue()
+	public String value()
 	{
 		return this.value;
 	}

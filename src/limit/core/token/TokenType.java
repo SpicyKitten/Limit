@@ -1,4 +1,4 @@
-package limit;
+package limit.core.token;
 
 public enum TokenType
 {
