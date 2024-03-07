@@ -41,6 +41,9 @@ public class Token
 	public static final Token T_NOT = new Token("!");
 	public static final Token T_SEMI = new Token(";");
 	public static final Token T_COLON = new Token(":");
+	// reference x& a la C++ style
+	public static final Token T_REF = new Token("&");
+	public static final Token T_PIPE = new Token("|");
 	public static final Token T_MORE_EQ = new Token(">=");
 	public static final Token T_LESS_EQ = new Token("<=");
 	public static final Token T_EQ_EQ = new Token("==");
@@ -53,8 +56,8 @@ public class Token
 	// continuation fn ( params ) -> continuation { body }
 	public static final Token T_CONT = new Token("->");
 	public static final Token T_LAMBDA = new Token("=>");
-	public static final Token T_AND = new Token("&&");
-	public static final Token T_OR = new Token("||");
+	public static final Token T_AND = new Token("and");
+	public static final Token T_OR = new Token("or");
 	public static final Token T_CLASS = new Token("class", TokenType.T_CLASS);
 	public static final Token T_NEW = new Token("new", TokenType.T_NEW);
 	public static final Token T_THIS = new Token("this", TokenType.T_THIS);
