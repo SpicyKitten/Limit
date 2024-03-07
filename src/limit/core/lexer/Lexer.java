@@ -242,8 +242,6 @@ public class Lexer
 		var terminators = Arrays.asList(QUOTE_CHAR, LCURLY_CHAR, RCURLY_CHAR);
 		while(idx < rest.length())
 		{
-			// if(rest.charAt(idx) == QUOTE_CHAR || rest.charAt(idx) ==
-			// LCURLY_CHAR)
 			if(terminators.contains(rest.charAt(idx)))
 			{
 				transition(State.READ_STRING);
@@ -283,7 +281,7 @@ public class Lexer
 			{
 				return token;
 			}
-			for(var keyword : Token.keywords)
+			for(var keyword : Token.KEYWORD_TOKENS)
 			{
 				if(match.equalsIgnoreCase(keyword.value()))
 				{

@@ -40,6 +40,32 @@ public class Operations
 		System.out.println(Arrays.toString(second));
 		var third = Operations.mapToDouble(second, x -> x * 1.5);
 		System.out.println(Arrays.toString(third));
+		var fourth = Operations.mapToObj(third, "12 >= %s"::formatted, String[]::new);
+		System.out.println(Arrays.toString(fourth));
+		var fifth = Operations.map(fourth, x -> x + "abcd", String[]::new);
+		System.out.println(Arrays.toString(fifth));
+		var sixth = Operations.all(fifth, x -> x.length() > 3);
+		System.out.println("All items longer than 3 characters: %b".formatted(sixth));
+		var seventh = Operations.any(fifth, x -> x.length() < 3);
+		System.out.println("Any items longer than 3 characters: %b".formatted(seventh));
+		var eighth = Operations.none(fifth, x -> x.length() < 3);
+		System.out.println("No items longer than 3 characters: %b".formatted(eighth));
+		var ninth = Operations.map(fifth, String::toUpperCase, String[]::new);
+		System.out.println(Arrays.toString(ninth));
+		var tenth =
+			Operations.map(ninth, (Function<String, String[]>) x -> x.split("A")[0].split(" >= "),
+			String[][]::new);
+		System.out.println("Tenth:");
+		Arrays.stream(tenth).map(Arrays::toString).forEach(System.out::println);
+		var eleventh =
+			Operations.filter(tenth, (Predicate<String[]>) x -> Double.valueOf(x[1]) > 7,
+				String[][]::new);
+		System.out.println("Eleventh:");
+		Arrays.stream(eleventh).map(Arrays::toString).forEach(System.out::println);
+		var twelfth =
+			Operations.mapToDouble(eleventh,
+				(ToDoubleFunction<String[]>) x -> Double.parseDouble(x[1]));
+		System.out.println("Twelfth: %s".formatted(Arrays.toString(twelfth)));
 	}
 	
 	public static <T> boolean any(Iterator<T> iterator, Predicate<T> predicate)
@@ -349,22 +375,19 @@ public class Operations
 		return none(Arrays.stream(array), predicate);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static <T> T[] filter(T[] array, Predicate<T> predicate)
+	public static <T> T[] filter(T[] array, Predicate<T> predicate, IntFunction<T[]> generator)
 	{
-		return (T[]) filter(Arrays.stream(array), predicate).toArray();
+		return filter(Arrays.stream(array), predicate).toArray(generator);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static <T, R> R[] map(T[] array, Function<T, R> mapping)
+	public static <T, R> R[] map(T[] array, Function<T, R> mapping, IntFunction<R[]> generator)
 	{
-		return (R[]) map(Arrays.stream(array), mapping).toArray();
+		return map(Arrays.stream(array), mapping).toArray(generator);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static <T> T[] map(T[] array, UnaryOperator<T> mapping)
+	public static <T> T[] map(T[] array, UnaryOperator<T> mapping, IntFunction<T[]> generator)
 	{
-		return (T[]) map(Arrays.stream(array), mapping).toArray();
+		return map(Arrays.stream(array), mapping).toArray(generator);
 	}
 	
 	public static <T> int[] mapToInt(T[] array, ToIntFunction<T> mapping)
@@ -402,10 +425,9 @@ public class Operations
 		return Arrays.stream(array).filter(predicate).toArray();
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static <R> R[] mapToObj(int[] array, IntFunction<R> mapping)
+	public static <R> R[] mapToObj(int[] array, IntFunction<R> mapping, IntFunction<R[]> generator)
 	{
-		return (R[]) map(Arrays.stream(array), mapping).toArray();
+		return map(Arrays.stream(array), mapping).toArray(generator);
 	}
 	
 	public static int[] map(int[] array, IntUnaryOperator mapping)
@@ -443,10 +465,10 @@ public class Operations
 		return Arrays.stream(array).filter(predicate).toArray();
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static <R> R[] mapToObj(double[] array, DoubleFunction<R> mapping)
+	public static <R> R[] mapToObj(double[] array, DoubleFunction<R> mapping,
+		IntFunction<R[]> generator)
 	{
-		return (R[]) map(Arrays.stream(array), mapping).toArray();
+		return map(Arrays.stream(array), mapping).toArray(generator);
 	}
 	
 	public static int[] mapToInt(double[] array, DoubleToIntFunction mapping)
@@ -484,10 +506,10 @@ public class Operations
 		return Arrays.stream(array).filter(predicate).toArray();
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static <R> R[] mapToObj(long[] array, LongFunction<R> mapping)
+	public static <R> R[] mapToObj(long[] array, LongFunction<R> mapping,
+		IntFunction<R[]> generator)
 	{
-		return (R[]) map(Arrays.stream(array), mapping).toArray();
+		return map(Arrays.stream(array), mapping).toArray(generator);
 	}
 	
 	public static int[] mapToInt(long[] array, LongToIntFunction mapping)

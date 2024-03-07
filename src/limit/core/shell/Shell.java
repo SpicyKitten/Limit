@@ -12,13 +12,10 @@ public class Shell
 {
 	public static void main(String[] args)
 	{
+		Token.summarize();
 		var currentTokens = new ArrayList<Token>();
 		var parser = new Parser();
 		var lexer = new Lexer();
-		for(var tok : Token.tokens)
-		{
-			System.out.println(tok);
-		}
 		try(var scanner = new Scanner(new UnclosableInputStream(System.in)))
 		{
 			while(scanner.hasNextLine())
@@ -30,6 +27,7 @@ public class Shell
 				lexer.check();
 				System.out.println("New tokens: %s".formatted(tokens));
 				System.out.println(lexer);
+				System.out.print("> ");
 			}
 			parser.parse(currentTokens);
 		}

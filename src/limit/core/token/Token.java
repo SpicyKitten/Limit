@@ -44,6 +44,9 @@ public class Token
 	// reference x& a la C++ style
 	public static final Token T_REF = new Token("&");
 	public static final Token T_PIPE = new Token("|");
+	public static final Token T_AT = new Token("@");
+	public static final Token T_DOT = new Token(".");
+	public static final Token T_DOTS = new Token("...");
 	public static final Token T_MORE_EQ = new Token(">=");
 	public static final Token T_LESS_EQ = new Token("<=");
 	public static final Token T_EQ_EQ = new Token("==");
@@ -69,13 +72,13 @@ public class Token
 	public static final Token T_TRUE = new Token("true", TokenType.T_TRUE);
 	public static final Token T_FALSE = new Token("false", TokenType.T_FALSE);
 	public static final Token T_EXIT = new Token("exit", TokenType.T_EXIT);
-	public static final Token[] zeroCharacterTokens;
-	public static final Token[] oneCharacterTokens;
-	public static final Token[] twoCharacterTokens;
-	public static final Token[] keywords;
+	public static final Token[][] SYMBOLIC_TOKENS;
+	public static final Token[] KEYWORD_TOKENS;
 	static
 	{
-		record TokenInfo(List<Token> keywords, Map<Integer, List<Token>> tokensByLength) {}
+		record TokenInfo(List<Token> keywords, Map<Integer, List<Token>> tokensByLength)
+		{
+		}
 		var tokenInfo = ThrowingSupplier.of(() -> {
 			int[] modifiers =
 				{ Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL };
@@ -92,28 +95,40 @@ public class Token
 				.filter(token -> Operations.any(token.value.codePoints(), Character::isAlphabetic))
 				.collect(Collectors.toList());
 			
-			// @formatter:on
 			var tokensByLength = tokens.stream()
 				.filter(Objects::nonNull)
 				.filter(Predicate.not(keywords::contains))
 				.collect(Collectors.groupingBy(token -> token.value.length()));
+			// @formatter:on
 			return new TokenInfo(keywords, tokensByLength);
 		}).get();
-		keywords = tokenInfo.keywords.toArray(Token[]::new);
+		KEYWORD_TOKENS = tokenInfo.keywords.toArray(Token[]::new);
 		var tokensByLength = tokenInfo.tokensByLength;
-		zeroCharacterTokens = tokensByLength.get(0).toArray(Token[]::new);
-		oneCharacterTokens = tokensByLength.get(1).toArray(Token[]::new);
-		twoCharacterTokens = tokensByLength.get(2).toArray(Token[]::new);
+		SYMBOLIC_TOKENS = new Token[tokensByLength.size()][];
+		for(var entry : tokensByLength.entrySet())
+		{
+			SYMBOLIC_TOKENS[entry.getKey()] = entry.getValue().toArray(Token[]::new);
+		}
 	}
-	public static final Token[] tokens =
-		unpack(oneCharacterTokens, unpack(twoCharacterTokens, unpack(keywords)));
-	static
+	public static final Token[] ALL_TOKENS =
+		unpackAll(SYMBOLIC_TOKENS[1], SYMBOLIC_TOKENS[2], SYMBOLIC_TOKENS[3], KEYWORD_TOKENS);
+	
+	public static void summarize()
 	{
-		System.out.println(Arrays.toString(keywords));
-		System.out.println(Arrays.toString(zeroCharacterTokens));
-		System.out.println(Arrays.toString(oneCharacterTokens));
-		System.out.println(Arrays.toString(twoCharacterTokens));
-		System.out.println(tokens.length);
+		System.out.println(Arrays.toString(KEYWORD_TOKENS));
+		System.out.println(Arrays.toString(SYMBOLIC_TOKENS[0]));
+		System.out.println(Arrays.toString(SYMBOLIC_TOKENS[1]));
+		System.out.println(Arrays.toString(SYMBOLIC_TOKENS[2]));
+		System.out.println(Arrays.toString(SYMBOLIC_TOKENS[3]));
+		System.out.println(Arrays.toString(ALL_TOKENS));
+		System.out.println("""
+			%d keywords
+			%d 0-length tokens
+			%d 1-length tokens
+			%d 2-length tokens
+			%d 3-length tokens
+			""".strip().formatted(KEYWORD_TOKENS.length, SYMBOLIC_TOKENS[0].length,
+			SYMBOLIC_TOKENS[1].length, SYMBOLIC_TOKENS[2].length, SYMBOLIC_TOKENS[3].length));
 	}
 	private String value;
 	private TokenType type;
@@ -132,7 +147,7 @@ public class Token
 	
 	public static Token parseToken(String input)
 	{
-		for(var token : Token.tokens)
+		for(var token : Token.ALL_TOKENS)
 		{
 			if(token.value.equals(input))
 			{
@@ -150,7 +165,7 @@ public class Token
 	 */
 	public static Token parseKeyword(String input)
 	{
-		for(Token token : Token.keywords)
+		for(Token token : Token.KEYWORD_TOKENS)
 		{
 			if(token.value.equals(input))
 			{
@@ -170,7 +185,7 @@ public class Token
 	 */
 	public static Token parseToken(String input, int characters)
 	{
-		for(var token : Token.tokens)
+		for(var token : Token.ALL_TOKENS)
 		{
 			if(token.value.length() <= characters && token.value.equals(input))
 			{
@@ -207,6 +222,17 @@ public class Token
 			return "Token[v=`%s`]".formatted(this.value);
 		}
 		return "Token[v=`%s`, t=`%s`]".formatted(this.value, this.type);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private static <E> E[] unpackAll(E[] first, E[]... rest)
+	{
+		var result = first;
+		for(var array : rest)
+		{
+			result = unpack(result, array);
+		}
+		return result;
 	}
 	
 	@SafeVarargs

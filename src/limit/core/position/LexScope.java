@@ -16,6 +16,7 @@ public record LexScope(int position, String delimiter) implements Position<Strin
 		entry("{", "}"),
 		entry("\"", "\"")
 	);
+	// @formatter:on
 	
 	public static Set<String> initiators()
 	{
