@@ -4,6 +4,8 @@
 open module limit
 {
 	requires avi.utils.throwing;
+	requires transitive org.junit.jupiter.api;
+	requires transitive it.unimi.dsi.fastutil;
 	
 	exports limit.core.exception;
 	exports limit.core.lexer;
@@ -11,4 +13,7 @@ open module limit
 	exports limit.core.position;
 	exports limit.core.shell;
 	exports limit.core.token;
+	exports limit.util.operations;
+	exports limit.util.reflection;
+	exports limit.util.string;
 }
