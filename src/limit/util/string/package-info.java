@@ -1,4 +1,4 @@
 /**
  * @author claude.ai
  */
-package limit.util.substring;
+package limit.util.string;
