@@ -111,7 +111,8 @@ public class Token
 		}
 	}
 	public static final Token[] ALL_TOKENS =
-		unpackAll(SYMBOLIC_TOKENS[1], SYMBOLIC_TOKENS[2], SYMBOLIC_TOKENS[3], KEYWORD_TOKENS);
+		Operations.unpackAll(SYMBOLIC_TOKENS[1], SYMBOLIC_TOKENS[2], SYMBOLIC_TOKENS[3],
+			KEYWORD_TOKENS);
 	
 	public static void summarize()
 	{
@@ -222,24 +223,5 @@ public class Token
 			return "Token[v=`%s`]".formatted(this.value);
 		}
 		return "Token[v=`%s`, t=`%s`]".formatted(this.value, this.type);
-	}
-	
-	@SuppressWarnings("unchecked")
-	private static <E> E[] unpackAll(E[] first, E[]... rest)
-	{
-		var result = first;
-		for(var array : rest)
-		{
-			result = unpack(result, array);
-		}
-		return result;
-	}
-	
-	@SafeVarargs
-	private static <E> E[] unpack(E[] most, E... rest)
-	{
-		var copy = Arrays.copyOf(most, most.length + rest.length);
-		System.arraycopy(rest, 0, copy, most.length, rest.length);
-		return copy;
 	}
 }

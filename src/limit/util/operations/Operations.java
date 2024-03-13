@@ -526,4 +526,23 @@ public class Operations
 	{
 		return map(Arrays.stream(array), mapping).toArray();
 	}
+	
+	@SuppressWarnings("unchecked")
+	public static <E> E[] unpackAll(E[] first, E[]... rest)
+	{
+		var result = first;
+		for(var array : rest)
+		{
+			result = unpack(result, array);
+		}
+		return result;
+	}
+	
+	@SafeVarargs
+	public static <E> E[] unpack(E[] most, E... rest)
+	{
+		var copy = Arrays.copyOf(most, most.length + rest.length);
+		System.arraycopy(rest, 0, copy, most.length, rest.length);
+		return copy;
+	}
 }
