@@ -111,8 +111,8 @@ public class Token
 		}
 	}
 	public static final Token[] ALL_TOKENS =
-		Operations.unpackAll(SYMBOLIC_TOKENS[1], SYMBOLIC_TOKENS[2], SYMBOLIC_TOKENS[3],
-			KEYWORD_TOKENS);
+		Operations.filter(Operations.unpackAll(SYMBOLIC_TOKENS[1], SYMBOLIC_TOKENS[2],
+			SYMBOLIC_TOKENS[3], KEYWORD_TOKENS), t -> t != T_EOF, Token[]::new);
 	
 	public static void summarize()
 	{
