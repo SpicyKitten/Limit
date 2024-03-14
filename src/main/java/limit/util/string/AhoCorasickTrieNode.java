@@ -13,6 +13,14 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import limit.core.token.Token;
 
+/**
+ * Aho-Corasick implementation. Based on <a href=
+ * "https://github.com/kunigami/blog-examples/blob/master/aho-corasick/aho_corasick.py">a
+ * Python implementation</a>
+ *
+ * @author SpicyKitten<rathavilash@gmail.com>
+ * 
+ */
 public class AhoCorasickTrieNode
 {
 	/** nodes accessible via successful transitions */
