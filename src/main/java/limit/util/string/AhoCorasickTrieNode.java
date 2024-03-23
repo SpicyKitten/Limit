@@ -184,11 +184,8 @@ public class AhoCorasickTrieNode
 				{
 					suffix = suffix.suffix;
 				}
-				var jumpNode = this;
-				if(suffix.hasChild(codepoint))
-				{
-					jumpNode = suffix.getChild(codepoint);
-				}
+				/* failure transition depends on suffix link destination */
+				var jumpNode = suffix.hasChild(codepoint) ? suffix.getChild(codepoint) : this;
 				if(!node.hasChild(codepoint))
 				{
 					node.failures.put(codepoint, jumpNode);
