@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -16,17 +17,15 @@ import limit.core.position.Position;
 import limit.core.token.Token;
 import limit.core.token.TokenType;
 import limit.util.operations.DefaultMappedValue;
+import limit.util.operations.Operations;
+import limit.util.string.unicode.Graphemes;
 
 public class Lexer
 {
-	private static final String[] NUMBER_REGEX =
-		{ "[0-9]", "^[0-9]+" };
-	private static final String[] IDENTIFIER_KEYWORD_REGEX =
-		{ "[_A-Za-z]", "^[_A-Za-z][_A-Za-z0-9]*" };
-	private static final String[] WHITESPACE_REGEX =
-		{ "[ \n\r]", "^[ \n\r]+" };
-	private static final String[] NON_TOKEN_REGEX =
-		{ "[ \n\r_A-Za-z0-9]" };
+	private static final Pattern[] NUMBER_REGEX = preprocessedRegex("[\\p{N}]", "^[\\p{N}]+");
+	private static final Pattern[] IDENTIFIER_KEYWORD_REGEX =
+		preprocessedRegex("[_\\p{L}]", "^[_\\p{L}][_\\p{L}\\p{M}]*");
+	private static final Pattern[] WHITESPACE_REGEX = preprocessedRegex("[ \n\r]", "^[ \n\r]+");
 	private String input;
 	private LexCursor cursor;
 	private State state;
@@ -49,7 +48,11 @@ public class Lexer
 		setInput(String.join("\n", input));
 		while(hasNextToken())
 		{
-			result.add(getNextToken());
+			var next = getNextToken();
+			if(next != Token.T_NONE)
+			{
+				result.add(next);
+			}
 		}
 		check();
 		return result;
@@ -91,7 +94,7 @@ public class Lexer
 	{
 		if(!hasNextToken())
 		{
-			return Token.T_EMPTY;
+			throw error("Tried to get next token when there are no more tokens to parse!");
 		}
 		var rest = this.input.substring(this.cursor.position());
 		var first = rest.charAt(0);
@@ -100,15 +103,15 @@ public class Lexer
 		{
 			case READING_INPUT ->
 			{
-				if(firstStr.matches(NUMBER_REGEX[0]))
+				if(firstStr.matches(NUMBER_REGEX[0].pattern()))
 				{
 					return getNumber(rest);
 				}
-				else if(firstStr.matches(IDENTIFIER_KEYWORD_REGEX[0]))
+				else if(firstStr.matches(IDENTIFIER_KEYWORD_REGEX[0].pattern()))
 				{
 					return getIdentifierOrKeyword(rest);
 				}
-				else if(firstStr.matches(WHITESPACE_REGEX[0]))
+				else if(firstStr.matches(WHITESPACE_REGEX[0].pattern()))
 				{
 					return getWhitespace(rest);
 				}
@@ -164,8 +167,7 @@ public class Lexer
 				else
 				{
 					System.out.println(rest);
-					advance(1);
-					return Token.T_EMPTY;
+					throw error("Unknown/invalid character found: %s", Graphemes.next(rest));
 				}
 			}
 			case READING_STRING ->
@@ -255,8 +257,7 @@ public class Lexer
 	
 	private Token getNumber(String rest)
 	{
-		var regex = NUMBER_REGEX[1];
-		var pattern = Pattern.compile(regex);
+		var pattern = NUMBER_REGEX[1];
 		var matcher = pattern.matcher(rest);
 		if(matcher.find(0))
 		{
@@ -269,8 +270,7 @@ public class Lexer
 	
 	private Token getIdentifierOrKeyword(String rest)
 	{
-		var regex = IDENTIFIER_KEYWORD_REGEX[1];
-		var pattern = Pattern.compile(regex);
+		var pattern = IDENTIFIER_KEYWORD_REGEX[1];
 		var matcher = pattern.matcher(rest);
 		if(matcher.find(0))
 		{
@@ -297,8 +297,7 @@ public class Lexer
 	
 	private Token getWhitespace(String rest)
 	{
-		var regex = WHITESPACE_REGEX[1];
-		var pattern = Pattern.compile(regex);
+		var pattern = WHITESPACE_REGEX[1];
 		var matcher = pattern.matcher(rest);
 		if(matcher.find(0))
 		{
@@ -413,20 +412,57 @@ public class Lexer
 	public String toString()
 	{
 		var positions = getErrorPositions();
-		var leftmost = positions.stream().mapToInt(Position::position).min().getAsInt();
-		var rightmost = positions.stream().mapToInt(Position::position).max().getAsInt();
-		var pointer = new StringBuilder(" ".repeat(rightmost + 1));
-		for(var position : positions)
+		// @formatter:off
+		TreeSet<Integer> sorted = positions.stream()
+			.map(Position::position)
+			.collect(Collectors.toCollection(TreeSet::new));
+		// @formatter:on
+		var pointer = new StringBuilder();
+		var graphemes = new Graphemes(this.input);
+		var index = 0;
+		var min = this.input.length();
+		var count = 0;
+		for(var grapheme : graphemes)
 		{
-			pointer.setCharAt(position.position(), '^');
+			var length = grapheme.length();
+			if(!sorted.headSet(index + length).tailSet(index).isEmpty())
+			{
+				min = Math.min(min, count);
+				pointer.append("↑");
+			}
+			else
+			{
+				pointer.append(grapheme);
+			}
+			index += length;
+			count++;
 		}
-		var prefix = " ".repeat(leftmost);
+		if(min == this.input.length())
+		{
+			pointer.append('↑');
+		}
+		var cleanPointer =
+			pointer.toString().replaceAll(Token.TOKEN_REGEX, " ").replaceAll("[a-zA-Z\\p{N}]", " ");
+		var prefix = " ".repeat(min);
 		var message = prefix + this.errorState.value();
 		return """
 			[Lexer state=%s scopes=%s]
 			%s
 			%s
-			%s""".formatted(this.state, this.interpolationScopes, this.input, pointer, message);
+			%s""".formatted(this.state, this.interpolationScopes, this.input, cleanPointer,
+			message);
+	}
+	
+	/**
+	 * Preprocessing regex to be Unicode-compatible
+	 *
+	 * @param regexes The regular expressions to preprocess
+	 * @return The preprocessed {@link java.util.regex.Pattern Patterns}
+	 */
+	private static Pattern[] preprocessedRegex(String... regexes)
+	{
+		return Operations.<String, Pattern>map(regexes,
+			str -> Pattern.compile(str, Pattern.UNICODE_CHARACTER_CLASS), Pattern[]::new);
 	}
 	
 	private enum State

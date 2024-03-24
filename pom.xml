@@ -9,7 +9,7 @@
 	<name>limit</name>
 	<description>pushing the limits</description>
 	<properties>
-		<mainClass>limit/limit.util.string.AhoCorasickTrieNode</mainClass>
+		<mainClass>limit/limit.core.shell.Shell</mainClass>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<goal-run>run</goal-run>
 		<java.version>21</java.version>
@@ -20,6 +20,7 @@
 		<exec-maven-plugin.version>3.2.0</exec-maven-plugin.version>
 		<assertj.version>3.25.3</assertj.version>
 		<fastutil.version>8.5.13</fastutil.version>
+		<icu4j.version>74.2</icu4j.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -53,6 +54,12 @@
 		    <groupId>it.unimi.dsi</groupId>
 		    <artifactId>fastutil</artifactId>
 		    <version>${fastutil.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.ibm.icu/icu4j -->
+		<dependency>
+		    <groupId>com.ibm.icu</groupId>
+		    <artifactId>icu4j</artifactId>
+		    <version>${icu4j.version}</version>
 		</dependency>
 	</dependencies>
 	<build>

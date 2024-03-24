@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import limit.util.operations.Operations;
 import limit.util.reflection.FieldReflector;
+import limit.util.string.AhoCorasickTrieNode;
 import throwing.ThrowingSupplier;
 
 public class Token
@@ -74,6 +75,7 @@ public class Token
 	public static final Token T_EXIT = new Token("exit", TokenType.T_EXIT);
 	public static final Token[][] SYMBOLIC_TOKENS;
 	public static final Token[] KEYWORD_TOKENS;
+	public static final String TOKEN_REGEX;
 	static
 	{
 		record TokenInfo(List<Token> keywords, Map<Integer, List<Token>> tokensByLength)
@@ -113,6 +115,23 @@ public class Token
 	public static final Token[] ALL_TOKENS =
 		Operations.filter(Operations.unpackAll(SYMBOLIC_TOKENS[1], SYMBOLIC_TOKENS[2],
 			SYMBOLIC_TOKENS[3], KEYWORD_TOKENS), t -> t != T_EOF, Token[]::new);
+	static {
+		var root = new AhoCorasickTrieNode();
+		for(var token : Token.ALL_TOKENS)
+		{
+			root.addEntry(token.value());
+		}
+		root.construct();
+		var alphabet = new StringBuilder();
+		Operations.map(root.alphabet(), str -> {
+			if(Operations.any("\'\"\\[](){}-+*?".split(""), str::contains))
+			{
+				return '\\' + str;
+			}
+			return str;
+		}).forEach(alphabet::append);
+		TOKEN_REGEX = "[%s]".formatted(alphabet);
+	}
 	
 	public static void summarize()
 	{

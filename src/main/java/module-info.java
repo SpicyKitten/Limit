@@ -8,6 +8,7 @@ open module limit
 	requires org.assertj.core;
 	requires org.junit.platform.commons;
 	requires it.unimi.dsi.fastutil;
+	requires com.ibm.icu;
 	
 	exports limit.core.exception;
 	exports limit.core.lexer;
@@ -18,4 +19,5 @@ open module limit
 	exports limit.util.operations;
 	exports limit.util.reflection;
 	exports limit.util.string;
+	exports limit.util.string.unicode;
 }

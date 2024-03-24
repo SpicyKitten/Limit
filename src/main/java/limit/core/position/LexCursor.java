@@ -26,6 +26,12 @@ public final class LexCursor implements Position<Void>
 	}
 	
 	@Override
+	public String toString()
+	{
+		return "<%s>".formatted(this.position);
+	}
+	
+	@Override
 	public Void representation()
 	{
 		throw new UnsupportedOperationException("representation() is not supported for LexCursor!");
