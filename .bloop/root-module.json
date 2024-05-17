@@ -1,0 +1,85 @@
+{
+    "version": "1.4.0",
+    "project": {
+        "name": "root-module",
+        "directory": "/home/oxy/Projects/limitmill",
+        "workspaceDir": "/home/oxy/Projects/limitmill",
+        "sources": [
+            "/home/oxy/Projects/limitmill/src"
+        ],
+        "dependencies": [
+            
+        ],
+        "classpath": [
+            "/home/oxy/.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar",
+            "/home/oxy/.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-simple/2.0.13/slf4j-simple-2.0.13.jar"
+        ],
+        "out": "/home/oxy/Projects/limitmill/.bloop/out/root-module",
+        "classesDir": "/home/oxy/Projects/limitmill/.bloop/out/root-module/classes",
+        "resources": [
+            "/home/oxy/Projects/limitmill/resources"
+        ],
+        "java": {
+            "options": [
+                
+            ]
+        },
+        "platform": {
+            "name": "jvm",
+            "config": {
+                "options": [
+                    "-Duser.dir=/home/oxy/Projects/limitmill"
+                ]
+            },
+            "mainClass": [
+                "Main"
+            ],
+            "classpath": [
+                "/home/oxy/.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar",
+                "/home/oxy/.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-simple/2.0.13/slf4j-simple-2.0.13.jar"
+            ],
+            "resources": [
+                "/home/oxy/Projects/limitmill/resources"
+            ]
+        },
+        "resolution": {
+            "modules": [
+                {
+                    "organization": "org.slf4j",
+                    "name": "slf4j-simple",
+                    "version": "2.0.13",
+                    "artifacts": [
+                        {
+                            "name": "slf4j-simple",
+                            "path": "/home/oxy/.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-simple/2.0.13/slf4j-simple-2.0.13.jar"
+                        },
+                        {
+                            "name": "slf4j-simple",
+                            "classifier": "sources",
+                            "path": "/home/oxy/.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-simple/2.0.13/slf4j-simple-2.0.13-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.slf4j",
+                    "name": "slf4j-api",
+                    "version": "2.0.13",
+                    "artifacts": [
+                        {
+                            "name": "slf4j-api",
+                            "path": "/home/oxy/.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar"
+                        },
+                        {
+                            "name": "slf4j-api",
+                            "classifier": "sources",
+                            "path": "/home/oxy/.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13-sources.jar"
+                        }
+                    ]
+                }
+            ]
+        },
+        "tags": [
+            "library"
+        ]
+    }
+}
