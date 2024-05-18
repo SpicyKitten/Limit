@@ -1,9 +1,13 @@
 import mill._, scalalib._
 
+/* `mill run` to execute 
+ * `mill test` to execute unit tests */
 object limit extends RootModule with JavaModule {
 
+  /* throwing util that is not on maven for some reasons */
   object throwingutil extends JavaModule
 
+  /* config for junit5 */
   object test extends JavaModuleTests with TestModule.Junit5 {
     def ivyDeps = Agg(
       ivy"org.junit.jupiter:junit-jupiter:5.10.2",
