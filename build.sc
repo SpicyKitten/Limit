@@ -1,7 +1,10 @@
 import mill._, scalalib._
 
 object limit extends RootModule with JavaModule {
-  trait Test extends JavaModuleTests with TestModule.Junit5 {
+
+  object throwingutil extends JavaModule 
+
+  object test extends JavaModuleTests with TestModule.Junit5 {
     def ivyDeps = Agg(
       ivy"org.junit.jupiter:junit-jupiter:5.10.2",
       ivy"org.junit.jupiter:junit-jupiter-engine:5.10.2",
@@ -13,11 +16,6 @@ object limit extends RootModule with JavaModule {
     )
     def moduleDeps = Seq(throwingutil, limit)
   }
-
-  object throwingutil extends JavaModule 
-
-  object test extends Test
-  object utiltest extends Test
 
   def moduleDeps = Seq(throwingutil)
   def mainClass = Some("limit.core.shell.Shell")
