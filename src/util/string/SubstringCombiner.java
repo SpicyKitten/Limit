@@ -1,4 +1,4 @@
-package limit.util.string;
+package src.util.string;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,8 +8,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import limit.core.token.Token;
-import limit.util.operations.Operations;
+import src.limit.token.Token;
+import src.util.operations.Operations;
 
 public class SubstringCombiner
 {

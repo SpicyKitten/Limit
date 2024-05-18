@@ -1,4 +1,4 @@
-package limit.core.position;
+package src.limit.position;
 
 public sealed interface Position<R>
 	permits LexScope, LexCursor

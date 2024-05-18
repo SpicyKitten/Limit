@@ -1,4 +1,4 @@
-package tests.limit.util.string.unicode;
+package test.src.util.string.unicode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
 
-import limit.util.string.unicode.Graphemes;
+import src.util.string.unicode.Graphemes;
 
 public class GraphemesTests
 {

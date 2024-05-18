@@ -1,11 +1,11 @@
-package limit.core.position;
+package src.limit.position;
 
 import static java.util.Map.entry;
 
 import java.util.Map;
 import java.util.Set;
 
-import limit.core.exception.LexScopeException;
+import src.limit.exception.LexScopeException;
 
 public record LexScope(int position, String delimiter) implements Position<String>
 {

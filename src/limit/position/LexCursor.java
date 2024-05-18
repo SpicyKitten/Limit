@@ -1,4 +1,4 @@
-package limit.core.position;
+package src.limit.position;
 
 public final class LexCursor implements Position<Void>
 {

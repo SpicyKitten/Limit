@@ -1,4 +1,4 @@
-package limit.core.shell;
+package src.limit.shell;
 
 import java.io.IOException;
 import java.io.InputStream;

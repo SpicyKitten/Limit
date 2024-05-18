@@ -1,4 +1,4 @@
-package limit.core.exception;
+package src.limit.exception;
 
 /**
  * @complete Under normal circumstances, this code can be considered

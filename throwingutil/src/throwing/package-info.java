@@ -1,1 +1,1 @@
-package throwing;
+package throwingutil.src.throwing;

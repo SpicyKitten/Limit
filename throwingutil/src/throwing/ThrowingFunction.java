@@ -1,4 +1,4 @@
-package throwing;
+package throwingutil.src.throwing;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -17,7 +17,7 @@ public interface ThrowingFunction<T, R> extends Function<T, R>, ExceptionFlowCon
 		}
 		catch(Exception e)
 		{
-			this.handle(e);
+			handle(e);
 			return null;
 		}
 	}

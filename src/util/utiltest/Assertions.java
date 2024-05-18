@@ -1,4 +1,4 @@
-package limit.util.test;
+package src.util.utiltest;
 
 import java.util.Collection;
 import java.util.Iterator;

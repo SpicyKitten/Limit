@@ -1,4 +1,4 @@
-package limit.util.operations;
+package src.util.operations;
 
 import java.util.function.Function;
 

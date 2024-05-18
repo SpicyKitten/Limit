@@ -1,10 +1,10 @@
-package throwing;
+package throwingutil.src.throwing;
 
 import java.util.LinkedHashMap;
 import java.util.function.Consumer;
 
 /**
- * Catches Exceptions, in order of specification, and 
+ * Catches Exceptions, in order of specification, and
  * redirects those exceptions to the appropriate handlers
  * 
  * @author ratha
@@ -18,7 +18,7 @@ public class Catcher<T extends Exception> implements Consumer<Exception>
 	@Override
 	public void accept(Exception t)
 	{
-		checker.keySet().stream().dropWhile(k -> !k.isInstance(t)).findFirst().map(checker::get)
+		this.checker.keySet().stream().dropWhile(k -> !k.isInstance(t)).findFirst().map(this.checker::get)
 				.ifPresent(k -> k.accept(t));
 	}
 
@@ -27,8 +27,8 @@ public class Catcher<T extends Exception> implements Consumer<Exception>
 	 */
 	private Catcher(Class<T> cls, Consumer<Exception> cons)
 	{
-		checker = new LinkedHashMap<>();
-		checker.put(cls, cons);
+		this.checker = new LinkedHashMap<>();
+		this.checker.put(cls, cons);
 	}
 
 	/**
@@ -36,7 +36,7 @@ public class Catcher<T extends Exception> implements Consumer<Exception>
 	 */
 	private Catcher(Catcher<T> other)
 	{
-		checker = new LinkedHashMap<>(other.checker);
+		this.checker = new LinkedHashMap<>(other.checker);
 	}
 
 	/**
@@ -45,7 +45,7 @@ public class Catcher<T extends Exception> implements Consumer<Exception>
 	 */
 	public static <T extends Exception> Catcher<T> of(Class<T> cls, Consumer<Exception> cons)
 	{
-		return new Catcher<T>(cls, cons);
+		return new Catcher<>(cls, cons);
 	}
 
 	/**
@@ -78,12 +78,18 @@ public class Catcher<T extends Exception> implements Consumer<Exception>
 	 */
 	public Catcher<T> andThen(Catcher<? extends Exception> after)
 	{
-		if (checker.containsKey(Exception.class))
+		if (this.checker.containsKey(Exception.class))
+		{
 			throw new IllegalStateException("All exception types have already been accounted for!");
+		}
 		var ret = new Catcher<>(this);
 		for(var entry : after.checker.entrySet())
+		{
 			if(!ret.checker.containsKey(entry.getKey()))
+			{
 				ret.checker.put(entry.getKey(), entry.getValue());
+			}
+		}
 		return ret;
 	}
 

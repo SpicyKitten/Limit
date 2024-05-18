@@ -1,4 +1,4 @@
-package throwing;
+package throwingutil.src.throwing;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -24,13 +24,15 @@ public interface ThrowingSupplier<T> extends Supplier<T>, ExceptionFlowControlle
 	
 	static <T> Supplier<T> of(ThrowingSupplier<T> tc, Consumer<Exception> h)
 	{
-		return new ThrowingSupplier<T>()
+		return new ThrowingSupplier<>()
 		{
+			@Override
 			public T get_() throws Exception
 			{
 				return tc.get();
 			}
 			
+			@Override
 			public void handle(Exception e)
 			{
 				h.accept(e);

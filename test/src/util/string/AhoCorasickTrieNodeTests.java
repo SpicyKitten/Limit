@@ -1,4 +1,4 @@
-package tests.limit.util.string;
+package test.src.util.string;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,8 +10,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import limit.core.token.Token;
-import limit.util.string.AhoCorasickTrieNode;
+import src.limit.token.Token;
+import src.util.string.AhoCorasickTrieNode;
 
 public class AhoCorasickTrieNodeTests
 {

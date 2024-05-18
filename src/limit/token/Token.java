@@ -1,4 +1,4 @@
-package limit.core.token;
+package src.limit.token;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -10,10 +10,10 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import limit.util.operations.Operations;
-import limit.util.reflection.FieldReflector;
-import limit.util.string.AhoCorasickTrieNode;
-import throwing.ThrowingSupplier;
+import src.util.operations.Operations;
+import src.util.reflection.FieldReflector;
+import src.util.string.AhoCorasickTrieNode;
+import throwingutil.src.throwing.ThrowingSupplier;
 
 public class Token
 {

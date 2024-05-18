@@ -1,8 +1,8 @@
-package limit.core.parser;
+package src.limit.parser;
 
 import java.util.List;
 
-import limit.core.token.Token;
+import src.limit.token.Token;
 
 public class Parser
 {

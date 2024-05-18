@@ -1,4 +1,4 @@
-package throwing;
+package throwingutil.src.throwing;
 
 /**
  * Controls exception flow by piping it into a handler.

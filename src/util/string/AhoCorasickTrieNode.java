@@ -1,17 +1,17 @@
-package limit.util.string;
+package src.util.string;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntConsumer;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
-import limit.core.token.Token;
+import src.limit.token.Token;
 
 /**
  * Aho-Corasick implementation. Based on <a href=

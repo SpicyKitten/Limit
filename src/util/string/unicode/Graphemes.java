@@ -1,6 +1,6 @@
-package limit.util.string.unicode;
+package src.util.string.unicode;
 
-import com.ibm.icu.text.BreakIterator;
+import java.text.BreakIterator;
 
 public class Graphemes implements Iterable<String>
 {

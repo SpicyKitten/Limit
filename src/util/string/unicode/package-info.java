@@ -1,4 +1,4 @@
 /**
  * @author SpicyKitten<rathavilash@gmail.com>
  */
-package limit.util.string.unicode;
+package src.util.string.unicode;

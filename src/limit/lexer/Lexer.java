@@ -1,4 +1,4 @@
-package limit.core.lexer;
+package src.limit.lexer;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -10,15 +10,15 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import limit.core.exception.LexException;
-import limit.core.position.LexCursor;
-import limit.core.position.LexScope;
-import limit.core.position.Position;
-import limit.core.token.Token;
-import limit.core.token.TokenType;
-import limit.util.operations.DefaultMappedValue;
-import limit.util.operations.Operations;
-import limit.util.string.unicode.Graphemes;
+import src.limit.exception.LexException;
+import src.limit.position.LexCursor;
+import src.limit.position.LexScope;
+import src.limit.position.Position;
+import src.limit.token.Token;
+import src.limit.token.TokenType;
+import src.util.operations.DefaultMappedValue;
+import src.util.operations.Operations;
+import src.util.string.unicode.Graphemes;
 
 public class Lexer
 {

@@ -1,5 +1,6 @@
 module avi.utils.throwing
 {
 	requires java.base;
-	exports throwing;
+	
+	exports throwingutil.src.throwing;
 }

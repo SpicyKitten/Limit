@@ -1,4 +1,4 @@
-package throwing;
+package throwingutil.src.throwing;
 
 import java.util.function.Consumer;
 
@@ -12,11 +12,11 @@ public interface ThrowingRunnable extends Runnable, ExceptionFlowController
 	{
 		try
 		{
-			this.run_();
+			run_();
 		}
 		catch (Exception e)
 		{
-			this.handle(e);
+			handle(e);
 		}
 	}
 

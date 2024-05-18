@@ -22,7 +22,7 @@ object limit extends RootModule with JavaModule {
   }
 
   def moduleDeps = Seq(throwingutil)
-  def mainClass = Some("limit.core.shell.Shell")
+  def mainClass = Some("src.limit.shell.Shell")
   def ivyDeps = Agg(
     ivy"org.assertj:assertj-core:3.25.3",
     ivy"it.unimi.dsi:fastutil:8.5.13",

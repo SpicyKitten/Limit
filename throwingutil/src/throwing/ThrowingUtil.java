@@ -1,6 +1,6 @@
-package throwing;
+package throwingutil.src.throwing;
 
-public class ThrowingUtil 
+public class ThrowingUtil
 {
 	@SuppressWarnings("unchecked")
 	static <E extends Exception> void raise(Exception e) throws E {
