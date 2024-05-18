@@ -2,7 +2,7 @@ import mill._, scalalib._
 
 object limit extends RootModule with JavaModule {
 
-  object throwingutil extends JavaModule 
+  object throwingutil extends JavaModule
 
   object test extends JavaModuleTests with TestModule.Junit5 {
     def ivyDeps = Agg(
